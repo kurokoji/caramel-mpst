@@ -31,6 +31,7 @@
 -export([lens_b/0]).
 -export([lens_c/0]).
 -export([list_match/2]).
+-export([main/0]).
 -export([open_variant_to_tag/1]).
 -export([receive/2]).
 -export([send/4]).
@@ -340,21 +341,21 @@ from_some(Opt) ->
   end.
 
 -spec start(global(_, _, _), fun((session(_)) -> ok), fun((session(_)) -> ok), fun((session(_)) -> ok)) -> ok.
-start(_g, A, B, C) ->
+start(_g, Fa, Fb, Fc) ->
   Pid_a = process:make(fun
   (_, Recv) ->
   Ch_a = from_some(Recv(infinity)),
-  A(Ch_a)
+  Fa(Ch_a)
 end),
   Pid_b = process:make(fun
   (_, Recv) ->
   Ch_b = from_some(Recv(infinity)),
-  B(Ch_b)
+  Fb(Ch_b)
 end),
   Pid_c = process:make(fun
   (_, Recv) ->
   Ch_c = from_some(Recv(infinity)),
-  C(Ch_c)
+  Fc(Ch_c)
 end),
   Ch_a = raw:dontknow(),
   Ch_b = raw:dontknow(),
@@ -365,5 +366,24 @@ end),
     process:send(Pid_c, Ch_c),
     ok
   end.
+
+-spec main() -> ok.
+main() -> start('-->'(fun alice/0, fun bob/0)(fun hello/0, fun finish/0, ok), fun
+  (Ch) ->
+  Ch_prime = send(Ch, fun
+  (X) -> {bob, X}
+end, fun
+  (X) -> {hello, X}
+end, 123),
+  close(Ch_prime)
+end, fun
+  (Ch) ->
+  {hello, {_v, Ch_prime}} = receive(Ch, fun
+  (X) -> {alice, X}
+end),
+  close(Ch_prime)
+end, fun
+  (Ch) -> close(Ch)
+end).
 
 

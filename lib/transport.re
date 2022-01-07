@@ -10,7 +10,7 @@ type handle('msg) = Erlang.pid('msg);
 
 type mpchan = {
   self: role_tag,
-  channels: Maps.t(role_tag, handle(mpst_msg)),
+  channels: Maps.t(role_tag, Erlang.pid(mpst_msg)),
 };
 
 external payload_cast: 'v => payload = "%identity";

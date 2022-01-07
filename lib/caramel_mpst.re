@@ -278,32 +278,61 @@ let from_some = opt => {
 let start = (_g: global(_, _, _), fa, fb, fc) => {
   let pid_a =
     Process.make((_, recv) => {
-      let ch_a = from_some(recv(~timeout=Process.Infinity));
+      let (_, _, ch_a) = from_some(recv(~timeout=Process.Infinity));
       (fa(ch_a): unit);
     });
   let pid_b =
     Process.make((_, recv) => {
-      let ch_b = from_some(recv(~timeout=Process.Infinity));
+      let (_, _, ch_b) = from_some(recv(~timeout=Process.Infinity));
       (fb(ch_b): unit);
     });
   let pid_c =
     Process.make((_, recv) => {
-      let ch_c = from_some(recv(~timeout=Process.Infinity));
+      let (_, _, ch_c) = from_some(recv(~timeout=Process.Infinity));
       (fc(ch_c): unit);
     });
+
+  /*
   let ch_a: session(_) =
     /* ここで `alice->pid_a, `bob->pid_b, `carol->pid_c の Map を作る */ Raw.dontknow();
-  let ch_b: session(_) =
-    /* ここで `alice->pid_a, `bob->pid_b, `carol->pid_c の Map を作る */ Raw.dontknow();
-  let ch_c: session(_) =
-    /* ここで `alice->pid_a, `bob->pid_b, `carol->pid_c の Map を作る */ Raw.dontknow();
-  Process.send(pid_a, ch_a);
-  Process.send(pid_b, ch_b);
-  Process.send(pid_c, ch_c);
+  */
+
+  let map_list = [
+    (open_variant_to_tag(x => `Alice(x)), pid_a),
+    (open_variant_to_tag(x => `Bob(x)), pid_b),
+    (open_variant_to_tag(x => `Carol(x)), pid_c)
+  ];
+  let ch_a: session(_) = {
+    mpchan: {
+      self: open_variant_to_tag(x => `Alice(x)),
+      channels: Maps.from_list(map_list),
+    },
+    dummy_witness: Raw.dontknow()
+  };
+  let ch_b: session(_) = {
+    mpchan: {
+      self: open_variant_to_tag(x => `Bob(x)),
+      channels: Maps.from_list(map_list),
+    },
+    dummy_witness: Raw.dontknow()
+  };
+  let ch_c: session(_) = {
+    mpchan: {
+      self: open_variant_to_tag(x => `Carol(x)),
+      channels: Maps.from_list(map_list),
+    },
+    dummy_witness: Raw.dontknow()
+  };
+  
+  let dummy_role = open_variant_to_tag(x => `Dummy(x));
+  let dummy_label = open_variant_to_tag(x => `Dummy(x));
+  Process.send(pid_a, (dummy_label, dummy_role, Transport.payload_cast(ch_a)));
+  Process.send(pid_b, (dummy_label, dummy_role, Transport.payload_cast(ch_b)));
+  Process.send(pid_c, (dummy_label, dummy_role, Transport.payload_cast(ch_c)));
   ();
 };
 
-let () = {
+let main = () => {
   start(
     (alice --> bob)(hello, finish, ()),
     ch => {
@@ -318,7 +347,7 @@ let () = {
     },
     ch => {
       // Carol
-      close(ch)
+      close(ch);
     },
   );
 };

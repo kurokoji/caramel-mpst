@@ -21,7 +21,7 @@
 -type handle(Msg) :: erlang:pid().
 
 -type mpchan() :: #{ self => role_tag()
-                   , channels => maps:t(role_tag(), handle(mpst_msg()))
+                   , channels => maps:t(role_tag(), erlang:pid())
                    }.
 
 -spec raw_send(mpchan(), role_tag(), label_tag(), _) -> ok.
