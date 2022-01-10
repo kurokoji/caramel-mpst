@@ -8,7 +8,7 @@ external assertfalse: unit => 'a = "assertfalse";
 
 external todo: unit => 'a = "todo";
 
-external guarded_receive: (~guard: 'a => bool) => 'a = "guarded_receive";
+external guarded_receive: (~from:Polyvar.tag) => 'a = "guarded_receive";
 
 external make_polyvar: (Polyvar.tag, 'a) => 'var = "make_polyvar";
 

@@ -167,7 +167,7 @@ let (-->):
   ) =>
   'cur
  =
-  (_from, _to, _label, _next) =>
+  (_from, _to, _label, _next, ) =>
     /*
      (alice --> bob)(hello, next)
      next : global('a, 'b, 'c)
@@ -332,22 +332,27 @@ let start = (_g: global(_, _, _), fa, fb, fc) => {
   ();
 };
 
+
+external payload_to_session: Transport.payload => session('a) = "payload_to_session";
+// external payload_to_session: Transport.payload => session('a) = "%identity";
+
 let main = () => {
   start(
     (alice --> bob)(hello, finish, ()),
     ch => {
       // Alice
-      let ch' = send(ch, x => `Bob(x), x => `hello(x), 123);
+      // payloadにキャストされて送られてくるのでsession型にキャストしなおす必要がある
+      let ch' = send(payload_to_session(ch), x => `Bob(x), x => `hello(x), 123);
       close(ch');
     },
     ch => {
       // Bob
-      let `hello(_v, ch') = receive(ch, x => `Alice(x));
+      let `hello(_v, ch') = receive(payload_to_session(ch), x => `Alice(x));
       close(ch');
     },
     ch => {
       // Carol
-      close(ch);
+      close(payload_to_session(ch));
     },
   );
 };

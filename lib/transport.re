@@ -6,14 +6,15 @@ type payload;
 
 type mpst_msg = (role_tag, label_tag, payload);
 
-type handle('msg) = Erlang.pid('msg);
+// type handle('msg) = Erlang.pid('msg);
 
 type mpchan = {
   self: role_tag,
   channels: Maps.t(role_tag, Erlang.pid(mpst_msg)),
 };
 
-external payload_cast: 'v => payload = "%identity";
+external payload_cast: 'v => payload = "payload_cast";
+// external payload_cast: 'v => payload = "%identity";
 
 let raw_send: 'v. (mpchan, role_tag, label_tag, 'v) => unit =
   (mpchan, role, label, v) => {
@@ -24,6 +25,6 @@ let raw_send: 'v. (mpchan, role_tag, label_tag, 'v) => unit =
 let raw_receive: 'v. (~from: role_tag) => (label_tag, 'v) =
   (~from) => {
     let (_, label, v) =
-      Raw.guarded_receive(~guard=((role, _, _)) => role == from);
+      Raw.guarded_receive(~from);
     (label, v);
   };

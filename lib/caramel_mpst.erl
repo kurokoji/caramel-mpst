@@ -340,37 +340,68 @@ from_some(Opt) ->
     none -> raw:fail()
   end.
 
--spec start(global(_, _, _), fun((session(_)) -> ok), fun((session(_)) -> ok), fun((session(_)) -> ok)) -> ok.
+-spec start(global(_, _, _), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok)) -> ok.
 start(_g, Fa, Fb, Fc) ->
   Pid_a = process:make(fun
   (_, Recv) ->
-  Ch_a = from_some(Recv(infinity)),
+  {_, _, Ch_a} = from_some(Recv(infinity)),
   Fa(Ch_a)
 end),
   Pid_b = process:make(fun
   (_, Recv) ->
-  Ch_b = from_some(Recv(infinity)),
+  {_, _, Ch_b} = from_some(Recv(infinity)),
   Fb(Ch_b)
 end),
   Pid_c = process:make(fun
   (_, Recv) ->
-  Ch_c = from_some(Recv(infinity)),
+  {_, _, Ch_c} = from_some(Recv(infinity)),
   Fc(Ch_c)
 end),
-  Ch_a = raw:dontknow(),
-  Ch_b = raw:dontknow(),
-  Ch_c = raw:dontknow(),
+  Map_list = [{open_variant_to_tag(fun
+  (X) -> {alice, X}
+end), Pid_a} | [{open_variant_to_tag(fun
+  (X) -> {bob, X}
+end), Pid_b} | [{open_variant_to_tag(fun
+  (X) -> {carol, X}
+end), Pid_c} | []]]],
+  Ch_a = #{ mpchan => #{ self => open_variant_to_tag(fun
+  (X) -> {alice, X}
+end)
+ , channels => maps:from_list(Map_list)
+ }
+   , dummy_witness => raw:dontknow()
+   },
+  Ch_b = #{ mpchan => #{ self => open_variant_to_tag(fun
+  (X) -> {bob, X}
+end)
+ , channels => maps:from_list(Map_list)
+ }
+   , dummy_witness => raw:dontknow()
+   },
+  Ch_c = #{ mpchan => #{ self => open_variant_to_tag(fun
+  (X) -> {carol, X}
+end)
+ , channels => maps:from_list(Map_list)
+ }
+   , dummy_witness => raw:dontknow()
+   },
+  Dummy_role = open_variant_to_tag(fun
+  (X) -> {dummy, X}
+end),
+  Dummy_label = open_variant_to_tag(fun
+  (X) -> {dummy, X}
+end),
   begin
-    process:send(Pid_a, Ch_a),
-    process:send(Pid_b, Ch_b),
-    process:send(Pid_c, Ch_c),
+    process:send(Pid_a, {Dummy_label, Dummy_role, transport:payload_cast(Ch_a)}),
+    process:send(Pid_b, {Dummy_label, Dummy_role, transport:payload_cast(Ch_b)}),
+    process:send(Pid_c, {Dummy_label, Dummy_role, transport:payload_cast(Ch_c)}),
     ok
   end.
 
 -spec main() -> ok.
 main() -> start('-->'(fun alice/0, fun bob/0)(fun hello/0, fun finish/0, ok), fun
   (Ch) ->
-  Ch_prime = send(Ch, fun
+  Ch_prime = send(payload_to_session(Ch), fun
   (X) -> {bob, X}
 end, fun
   (X) -> {hello, X}
@@ -378,12 +409,12 @@ end, 123),
   close(Ch_prime)
 end, fun
   (Ch) ->
-  {hello, {_v, Ch_prime}} = receive(Ch, fun
+  {hello, {_v, Ch_prime}} = receive(payload_to_session(Ch), fun
   (X) -> {alice, X}
 end),
   close(Ch_prime)
 end, fun
-  (Ch) -> close(Ch)
+  (Ch) -> close(payload_to_session(Ch))
 end).
 
 
