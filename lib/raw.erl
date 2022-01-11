@@ -1,3 +1,4 @@
+% Source code generated with Caramel.
 -module(raw).
 
 -export([fail/1]).

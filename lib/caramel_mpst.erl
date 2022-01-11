@@ -37,6 +37,9 @@
 -export([send/4]).
 -export([start/4]).
 -export([to_bob/1]).
+-export([payload_to_session/1]).
+
+payload_to_session(A) -> A.
 
 -type session(A) :: #{ mpchan => transport:mpchan()
                      , dummy_witness => A
