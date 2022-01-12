@@ -96,6 +96,7 @@ let hello_or_goodbye = () => {
   ],
 };
 
+/*
 let to_bob = disj => {
   concat: (l, r) =>
     Lists.map(
@@ -114,6 +115,7 @@ let to_bob = disj => {
     );
   },
 };
+*/
 
 // (x => `Bob(x))  を Erlang のアトム bob に変換する
 let open_variant_to_tag: 'var. open_variant('var, _) => Polyvar.tag =
@@ -143,7 +145,7 @@ let send:
     {mpchan: sess.mpchan, dummy_witness: Raw.dontknow()};
   };
 
-let receive:
+let receive_:
   'var 'lab.
   (session('var), open_variant('var, inp('lab))) => 'lab
  =
@@ -156,18 +158,17 @@ let receive:
 
 let close: session(unit) => unit = _ => ();
 
-let (-->):
+let comm:
   'from 'to_ 'outlab 'inplab 's 't 'v 'next 'mid 'cur.
   (
     unit => role('s, 'to_, 'mid, 'cur, 'from, inp('inplab)),
     unit => role('t, 'from, 'next, 'mid, 'to_, out('outlab)),
     unit => label('outlab, ('v, session('s)), 'inplab, ('v, session('t))),
     unit => 'next,
-    unit
   ) =>
   'cur
  =
-  (_from, _to, _label, _next, ) =>
+  (_from, _to, _label, _next) =>
     /*
      (alice --> bob)(hello, next)
      next : global('a, 'b, 'c)
@@ -183,6 +184,7 @@ let (-->):
 
 let finish: unit => global(unit, unit, unit) = () => Raw.dontknow();
 
+/*
 let choice_at:
   'cur 'a 'b 'c 'left 'right 'lr 'l 'r 'x.
   (
@@ -208,7 +210,9 @@ let choice_at:
 
      */
     Raw.dontknow();
+    */
 
+/*
 let extract:
   'a 'b 'c.
   (
@@ -221,21 +225,23 @@ let extract:
     Raw.todo();
             // {mpchan: /* ここに入れる */, dummy_witness: Raw.dontknow()}
   };
+  */
 
 // Example
 
+/*
 let g = () =>
   choice_at(
     alice,
     to_bob(hello_or_goodbye),
     (
       alice,
-      (alice --> bob)(
+      comm(alice, bob,
         hello,
-        (bob --> carol)(hello, (carol --> alice)(hello, finish)),
+        comm(bob, carol, hello, comm(carol, alice, hello, finish)),
       ),
     ),
-    (alice, (alice --> bob)(goodbye, (bob --> carol)(goodbye, finish))),
+    (alice, comm(alice, bob, goodbye, comm(bob, carol, goodbye, finish))),
   );
 
 let a = ch =>
@@ -267,6 +273,7 @@ let c = ch => {
     };
   close(ch3);
 };
+*/
 
 let from_some = opt => {
   switch (opt) {
@@ -338,7 +345,7 @@ external payload_to_session: Transport.payload => session('a) = "payload_to_sess
 
 let main = () => {
   start(
-    (alice --> bob)(hello, finish, ()),
+    comm(alice, bob, hello, finish),
     ch => {
       // Alice
       // payloadにキャストされて送られてくるのでsession型にキャストしなおす必要がある
@@ -347,7 +354,7 @@ let main = () => {
     },
     ch => {
       // Bob
-      let `hello(_v, ch') = receive(payload_to_session(ch), x => `Alice(x));
+      let `hello(_v, ch') = receive_(payload_to_session(ch), x => `Alice(x));
       close(ch');
     },
     ch => {
