@@ -19,7 +19,8 @@ todo() -> todo.
 
 guarded_receive(From) ->
     receive
-        X when element(0, X) == From ->
+        % Erlangは1-indexed
+        X when element(1, X) == From ->
         X
     end.
 

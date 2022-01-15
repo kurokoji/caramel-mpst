@@ -11,25 +11,20 @@
 -export_type([role/6]).
 -export_type([session/1]).
 
--export([alice/0]).
--export([bob/0]).
--export([carol/0]).
+-export([choice_at/4]).
 -export([close/1]).
 -export([comm/4]).
 -export([finish/0]).
 -export([from_some/1]).
--export([goodbye/0]).
--export([hello/0]).
--export([hello_or_goodbye/0]).
 -export([lens_a/0]).
 -export([lens_b/0]).
 -export([lens_c/0]).
 -export([list_match/2]).
--export([main/0]).
 -export([open_variant_to_tag/1]).
 -export([receive_/2]).
 -export([send/4]).
 -export([start/4]).
+-export([to_bob/1]).
 -export([payload_to_session/1]).
 
 payload_to_session(A) -> A.
@@ -94,83 +89,8 @@ end
 end
    }.
 
--spec alice() -> role(A, B, {session(A), C, D}, {session(B), C, D}, {alice, E}
-   , E).
-alice() ->
-  #{ role_label => fun
-  ({alice, V}) -> V
-end
-   , role_lens => lens_a()
-   }.
-
--spec bob() -> role(A, B, {C, session(A), D}, {C, session(B), D}, {bob, E}
- , E).
-bob() ->
-  #{ role_label => fun
-  ({bob, V}) -> V
-end
-   , role_lens => lens_b()
-   }.
-
--spec carol() -> role(A, B, {C, D, session(A)}, {C, D, session(B)}, {carol, E}
-   , E).
-carol() ->
-  #{ role_label => fun
-  ({carol, V}) -> V
-end
-   , role_lens => lens_c()
-   }.
-
--spec hello() -> label({hello, A}
-   , A, {hello, B}
-   , B).
-hello() ->
-  #{ label_closed => fun
-  ({hello, V}) -> V
-end
-   , label_open => fun
-  (V) -> {hello, V}
-end
-   }.
-
--spec goodbye() -> label({goodbye, A}
-     , A, {goodbye, B}
-     , B).
-goodbye() ->
-  #{ label_closed => fun
-  ({goodbye, V}) -> V
-end
-   , label_open => fun
-  (V) -> {goodbye, V}
-end
-   }.
-
 -spec list_match(fun((_a) -> _b), list(_a)) -> _b.
 list_match(_, _) -> raw:assertfalse().
-
--spec hello_or_goodbye() -> disj({goodbye, A}
-              | {hello, B}
-              , {hello, B}
-              , {goodbye, A}
-              ).
-hello_or_goodbye() ->
-  #{ concat => fun
-  (L, R) -> [{hello, list_match(fun
-  ({hello, V}) -> V
-end, L)} | [{goodbye, list_match(fun
-  ({goodbye, V}) -> V
-end, R)} | []]]
-end
-   , split => fun
-  (Lr) -> {[{hello, list_match(fun
-  ({hello, V}) -> V;
-  ({goodbye, _}) -> raw:dontknow()
-end, Lr)} | []], [{goodbye, list_match(fun
-  ({goodbye, V}) -> V;
-  ({hello, _}) -> raw:dontknow()
-end, Lr)} | []]}
-end
-   }.
 
 -spec open_variant_to_tag(open_variant(_, _)) -> polyvar:tag().
 open_variant_to_tag(Var) ->
@@ -206,12 +126,44 @@ comm(_from, _to, _label, _next) -> raw:dontknow().
 -spec finish() -> global(ok, ok, ok).
 finish() -> raw:dontknow().
 
+-spec choice_at(fun(() -> role(ok, _lr, global(_a, _b, _c), _cur, _x, _)), disj(_lr, _l, _r), {fun(() -> role(_l, ok, _left, global(_a, _b, _c), _x, _)), fun(() -> _left)}, {fun(() -> role(_r, ok, _right, global(_a, _b, _c), _x, _)), fun(() -> _right)}) -> _cur.
+choice_at(_alice, _disj, {_alice1, _left}, {_alice2, _right}) -> raw:dontknow().
+
 -spec from_some(option:t(A)) -> A.
 from_some(Opt) ->
   case Opt of
     {some, V} -> V;
     none -> raw:fail()
   end.
+
+-spec to_bob(disj(A, B, C)) -> disj({bob, out(A)}
+    , {bob, out(B)}
+    , {bob, out(C)}
+    ).
+to_bob(Dis) ->
+  Concat = maps:get(concat, Dis),
+  Split = maps:get(split, Dis),
+  #{ concat => fun
+  (L, R) -> lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, Concat(lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, L), lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, R)))
+end
+   , split => fun
+  (Lr) ->
+  {L, R} = Split(lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, Lr)),
+  {lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, L), lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, R)}
+end
+   }.
 
 -spec start(global(_, _, _), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok)) -> ok.
 start(_g, Fa, Fb, Fc) ->
@@ -270,24 +222,5 @@ end),
     process:send(Pid_c, {Dummy_label, Dummy_role, transport:payload_cast(Ch_c)}),
     ok
   end.
-
--spec main() -> ok.
-main() -> start(comm(fun alice/0, fun bob/0, fun hello/0, fun finish/0), fun
-  (Ch) ->
-  Ch_prime = send(payload_to_session(Ch), fun
-  (X) -> {bob, X}
-end, fun
-  (X) -> {hello, X}
-end, 123),
-  close(Ch_prime)
-end, fun
-  (Ch) ->
-  {hello, {_v, Ch_prime}} = receive_(payload_to_session(Ch), fun
-  (X) -> {alice, X}
-end),
-  close(Ch_prime)
-end, fun
-  (Ch) -> close(payload_to_session(Ch))
-end).
 
 

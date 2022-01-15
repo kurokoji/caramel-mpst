@@ -25,6 +25,6 @@ let raw_send: 'v. (mpchan, role_tag, label_tag, 'v) => unit =
 let raw_receive: 'v. (~from: role_tag) => (label_tag, 'v) =
   (~from) => {
     let (_, label, v) =
-      Raw.guarded_receive(~from);
+      Raw.guarded_receive(~from=from);
     (label, v);
   };
