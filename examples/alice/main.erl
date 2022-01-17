@@ -17,7 +17,7 @@
 -export([hello_or_goodbye/0]).
 -export([main/0]).
 
--opaque phantom(A) :: reference().
+-type phantom(A) :: A.
 
 -spec get_alice_typ(caramel_mpst:global(_a, _, _)) -> phantom(_a).
 get_alice_typ(_x) -> raw:dontknow().
@@ -133,12 +133,12 @@ end}, {fun alice/0, fun
 end)
 end}).
 
--spec a(caramel_mpst:session({bob, caramel_mpst:out({goodbye, {integer(), caramel_mpst:session(ok)}}
+-spec a(caramel_mpst:session(phantom({bob, caramel_mpst:out({goodbye, {integer(), caramel_mpst:session(ok)}}
 | {hello, {integer(), caramel_mpst:session({carol, caramel_mpst:inp({hello, {_, caramel_mpst:session(ok)}}
  )}
  )}}
 )}
-)) -> ok.
+))) -> ok.
 a(Ch) ->
   get_alice_typ(g()),
   begin
@@ -163,14 +163,14 @@ caramel_mpst:close(Ch1)
     io:format(<<"alice~n">>, [])
   end.
 
--spec b(caramel_mpst:session({alice, caramel_mpst:inp({goodbye, {_, caramel_mpst:session({carol, caramel_mpst:out({goodbye, {binary(), caramel_mpst:session(ok)}}
+-spec b(caramel_mpst:session(phantom({alice, caramel_mpst:inp({goodbye, {_, caramel_mpst:session({carol, caramel_mpst:out({goodbye, {binary(), caramel_mpst:session(ok)}}
 )}
 )}}
 | {hello, {integer(), caramel_mpst:session({carol, caramel_mpst:out({hello, {integer(), caramel_mpst:session(ok)}}
  )}
  )}}
 )}
-)) -> ok.
+))) -> ok.
 b(Ch) ->
   get_bob_typ(g()),
   Ch3 = case caramel_mpst:receive_(Ch, fun
@@ -192,12 +192,12 @@ end, <<"foo">>)
     io:format(<<"bob~n">>, [])
   end.
 
--spec c(caramel_mpst:session({bob, caramel_mpst:inp({goodbye, {_, caramel_mpst:session(ok)}}
+-spec c(caramel_mpst:session(phantom({bob, caramel_mpst:inp({goodbye, {_, caramel_mpst:session(ok)}}
 | {hello, {_, caramel_mpst:session({alice, caramel_mpst:out({hello, {integer(), caramel_mpst:session(ok)}}
  )}
  )}}
 )}
-)) -> ok.
+))) -> ok.
 c(Ch) ->
   get_carol_typ(g()),
   Ch3 = case caramel_mpst:receive_(Ch, fun
