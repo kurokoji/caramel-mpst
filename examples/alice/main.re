@@ -1,3 +1,10 @@
+open Caramel_mpst;
+
+type phantom('a);
+let get_alice_typ: global('a,'b,'c) => phantom('a) = _x => Raw.dontknow();
+let get_bob_typ: global('a,'b,'c) => phantom('b) = _x => Raw.dontknow();
+let get_carol_typ: global('a,'b,'c) => phantom('c) = _x => Raw.dontknow();
+
 let alice = () => {
   Caramel_mpst.role_label: (`Alice(v)) => v,
   role_lens: Caramel_mpst.lens_a(),
@@ -20,7 +27,6 @@ let goodbye = () => {
   Caramel_mpst.label_closed: (`goodbye(v)) => v,
   Caramel_mpst.label_open: v => `goodbye(v),
 };
-
 let hello_or_goodbye: unit => Caramel_mpst.disj('lr, 'l, 'r) =
   () => {
     split: lr => (
@@ -73,7 +79,8 @@ let g = () => {
   );
 }
 
-let a = ch =>
+let a = (ch:session('a)) => {
+  let (_:phantom('a)) = get_alice_typ(g());  
   if (true) {
     let ch1 = Caramel_mpst.send(ch, x => `Bob(x), x => `hello(x), 123);
     switch (Caramel_mpst.receive_(ch1, x => `Carol(x))) {
@@ -82,21 +89,25 @@ let a = ch =>
   } else {
     let ch1 = Caramel_mpst.send(ch, x => `Bob(x), x => `goodbye(x), 123);
     Caramel_mpst.close(ch1);
-  };
+  }
 
-let b = ch => {
+  Io.format("alice~n", []);
+}
+
+let b = (ch:session('b)) => {
+  let (_:phantom('b)) = get_bob_typ(g());  
   let ch3 =
     switch (Caramel_mpst.receive_(ch, x => `Alice(x))) {
     | `hello(v, ch2) => Caramel_mpst.send(ch2, x => `Carol(x), x => `hello(x), v + 123)
     | `goodbye(_v, ch2) =>
       Caramel_mpst.send(ch2, x => `Carol(x), x => `goodbye(x), "foo")
     };
-  /* let ch4 = Caramel_mpst.send(ch3, x => `Caral(x), x => `goodbye(x), "foo"); */
-  /* Caramel_mpst.close(ch4); */
   Caramel_mpst.close(ch3);
+  Io.format("bob~n", []);
 };
 
-let c = ch => {
+let c = (ch: session('c)) => {
+  let (_: phantom('c)) = get_carol_typ(g());
   let ch3 =
     switch (Caramel_mpst.receive_(ch, x => `Bob(x))) {
     | `hello(_v, ch2) =>
@@ -104,6 +115,7 @@ let c = ch => {
     | `goodbye(_v, ch2) => ch2
     };
   Caramel_mpst.close(ch3);
+  Io.format("Carol~n", []);
 };
 
 /*

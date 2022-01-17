@@ -1,5 +1,6 @@
 % Source code generated with Caramel.
 -module(main).
+-export_type([phantom/1]).
 
 -export([a/1]).
 -export([alice/0]).
@@ -8,10 +9,24 @@
 -export([c/1]).
 -export([carol/0]).
 -export([g/0]).
+-export([get_alice_typ/1]).
+-export([get_bob_typ/1]).
+-export([get_carol_typ/1]).
 -export([goodbye/0]).
 -export([hello/0]).
 -export([hello_or_goodbye/0]).
 -export([main/0]).
+
+-opaque phantom(A) :: reference().
+
+-spec get_alice_typ(caramel_mpst:global(_a, _, _)) -> phantom(_a).
+get_alice_typ(_x) -> raw:dontknow().
+
+-spec get_bob_typ(caramel_mpst:global(_, _b, _)) -> phantom(_b).
+get_bob_typ(_x) -> raw:dontknow().
+
+-spec get_carol_typ(caramel_mpst:global(_, _, _c)) -> phantom(_c).
+get_carol_typ(_x) -> raw:dontknow().
 
 -spec alice() -> caramel_mpst:role(A, B, {caramel_mpst:session(A), C, D}, {caramel_mpst:session(B), C, D}, {alice, E}
    , E).
@@ -125,8 +140,10 @@ end}).
 )}
 )) -> ok.
 a(Ch) ->
-  case true of
-    true -> Ch1 = caramel_mpst:send(Ch, fun
+  get_alice_typ(g()),
+  begin
+    case true of
+      true -> Ch1 = caramel_mpst:send(Ch, fun
   (X) -> {bob, X}
 end, fun
   (X) -> {hello, X}
@@ -136,12 +153,14 @@ case caramel_mpst:receive_(Ch1, fun
 end) of
   {hello, {_v, Ch2}} -> caramel_mpst:close(Ch2)
 end;
-    false -> Ch1 = caramel_mpst:send(Ch, fun
+      false -> Ch1 = caramel_mpst:send(Ch, fun
   (X) -> {bob, X}
 end, fun
   (X) -> {goodbye, X}
 end, 123),
 caramel_mpst:close(Ch1)
+    end,
+    io:format(<<"alice~n">>, [])
   end.
 
 -spec b(caramel_mpst:session({alice, caramel_mpst:inp({goodbye, {_, caramel_mpst:session({carol, caramel_mpst:out({goodbye, {binary(), caramel_mpst:session(ok)}}
@@ -153,6 +172,7 @@ caramel_mpst:close(Ch1)
 )}
 )) -> ok.
 b(Ch) ->
+  get_bob_typ(g()),
   Ch3 = case caramel_mpst:receive_(Ch, fun
   (X) -> {alice, X}
 end) of
@@ -167,7 +187,10 @@ end, fun
   (X) -> {goodbye, X}
 end, <<"foo">>)
   end,
-  caramel_mpst:close(Ch3).
+  begin
+    caramel_mpst:close(Ch3),
+    io:format(<<"bob~n">>, [])
+  end.
 
 -spec c(caramel_mpst:session({bob, caramel_mpst:inp({goodbye, {_, caramel_mpst:session(ok)}}
 | {hello, {_, caramel_mpst:session({alice, caramel_mpst:out({hello, {integer(), caramel_mpst:session(ok)}}
@@ -176,6 +199,7 @@ end, <<"foo">>)
 )}
 )) -> ok.
 c(Ch) ->
+  get_carol_typ(g()),
   Ch3 = case caramel_mpst:receive_(Ch, fun
   (X) -> {bob, X}
 end) of
@@ -186,7 +210,10 @@ end, fun
 end, 123);
     {goodbye, {_v, Ch2}} -> Ch2
   end,
-  caramel_mpst:close(Ch3).
+  begin
+    caramel_mpst:close(Ch3),
+    io:format(<<"Carol~n">>, [])
+  end.
 
 -spec main() -> ok.
 main() -> caramel_mpst:start(g(), fun a/1, fun b/1, fun c/1).
