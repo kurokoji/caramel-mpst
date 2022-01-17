@@ -118,10 +118,15 @@ end}, {fun alice/0, fun
 end)
 end}).
 
--spec a(transport:payload()) -> ok.
+-spec a(caramel_mpst:session({bob, caramel_mpst:out({goodbye, {integer(), caramel_mpst:session(ok)}}
+| {hello, {integer(), caramel_mpst:session({carol, caramel_mpst:inp({hello, {_, caramel_mpst:session(ok)}}
+ )}
+ )}}
+)}
+)) -> ok.
 a(Ch) ->
   case true of
-    true -> Ch1 = caramel_mpst:send(caramel_mpst:payload_to_session(Ch), fun
+    true -> Ch1 = caramel_mpst:send(Ch, fun
   (X) -> {bob, X}
 end, fun
   (X) -> {hello, X}
@@ -131,7 +136,7 @@ case caramel_mpst:receive_(Ch1, fun
 end) of
   {hello, {_v, Ch2}} -> caramel_mpst:close(Ch2)
 end;
-    false -> Ch1 = caramel_mpst:send(caramel_mpst:payload_to_session(Ch), fun
+    false -> Ch1 = caramel_mpst:send(Ch, fun
   (X) -> {bob, X}
 end, fun
   (X) -> {goodbye, X}
@@ -139,9 +144,16 @@ end, 123),
 caramel_mpst:close(Ch1)
   end.
 
--spec b(transport:payload()) -> ok.
+-spec b(caramel_mpst:session({alice, caramel_mpst:inp({goodbye, {_, caramel_mpst:session({carol, caramel_mpst:out({goodbye, {binary(), caramel_mpst:session(ok)}}
+)}
+)}}
+| {hello, {integer(), caramel_mpst:session({carol, caramel_mpst:out({hello, {integer(), caramel_mpst:session(ok)}}
+ )}
+ )}}
+)}
+)) -> ok.
 b(Ch) ->
-  Ch3 = case caramel_mpst:receive_(caramel_mpst:payload_to_session(Ch), fun
+  Ch3 = case caramel_mpst:receive_(Ch, fun
   (X) -> {alice, X}
 end) of
     {hello, {V, Ch2}} -> caramel_mpst:send(Ch2, fun
@@ -157,9 +169,14 @@ end, <<"foo">>)
   end,
   caramel_mpst:close(Ch3).
 
--spec c(transport:payload()) -> ok.
+-spec c(caramel_mpst:session({bob, caramel_mpst:inp({goodbye, {_, caramel_mpst:session(ok)}}
+| {hello, {_, caramel_mpst:session({alice, caramel_mpst:out({hello, {integer(), caramel_mpst:session(ok)}}
+ )}
+ )}}
+)}
+)) -> ok.
 c(Ch) ->
-  Ch3 = case caramel_mpst:receive_(caramel_mpst:payload_to_session(Ch), fun
+  Ch3 = case caramel_mpst:receive_(Ch, fun
   (X) -> {bob, X}
 end) of
     {hello, {_v, Ch2}} -> caramel_mpst:send(Ch2, fun

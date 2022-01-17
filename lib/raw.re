@@ -13,3 +13,6 @@ external guarded_receive: (~from:Polyvar.tag) => 'a = "guarded_receive";
 external make_polyvar: (Polyvar.tag, 'a) => 'var = "make_polyvar";
 
 external destruct_polyvar: 'var => (Polyvar.tag, 'a) = "destruct_polyvar";
+
+external cast : 'a => 'b = "cast";
+

@@ -21,13 +21,11 @@
 -export([lens_c/0]).
 -export([list_match/2]).
 -export([open_variant_to_tag/1]).
+-export([payload_to_session/1]).
 -export([receive_/2]).
 -export([send/4]).
 -export([start/4]).
 -export([to_bob/1]).
--export([payload_to_session/1]).
-
-payload_to_session(A) -> A.
 
 -type session(A) :: #{ mpchan => transport:mpchan()
                      , dummy_witness => A
@@ -165,22 +163,25 @@ end, R)}
 end
    }.
 
--spec start(global(_, _, _), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok), fun((transport:payload()) -> ok)) -> ok.
+-spec payload_to_session(transport:payload()) -> session(_).
+payload_to_session(X) -> raw:cast(X).
+
+-spec start(global(_a, _b, _c), fun((session(_a)) -> ok), fun((session(_b)) -> ok), fun((session(_c)) -> ok)) -> ok.
 start(_g, Fa, Fb, Fc) ->
   Pid_a = process:make(fun
   (_, Recv) ->
   {_, _, Ch_a} = from_some(Recv(infinity)),
-  Fa(Ch_a)
+  Fa(payload_to_session(Ch_a))
 end),
   Pid_b = process:make(fun
   (_, Recv) ->
   {_, _, Ch_b} = from_some(Recv(infinity)),
-  Fb(Ch_b)
+  Fb(payload_to_session(Ch_b))
 end),
   Pid_c = process:make(fun
   (_, Recv) ->
   {_, _, Ch_c} = from_some(Recv(infinity)),
-  Fc(Ch_c)
+  Fc(payload_to_session(Ch_c))
 end),
   Map_list = [{open_variant_to_tag(fun
   (X) -> {alice, X}

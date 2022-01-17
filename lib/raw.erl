@@ -8,6 +8,7 @@
 -export([guarded_receive/1]).
 -export([make_polyvar/2]).
 -export([destruct_polyvar/1]).
+-export([cast/1]).
 
 fail(X) -> erlang:error(X).
 
@@ -27,3 +28,5 @@ guarded_receive(From) ->
 make_polyvar(Tag, V) -> {Tag, V}.
 
 destruct_polyvar({Tag, V}) -> {Tag, V}.
+
+cast(X) -> X.

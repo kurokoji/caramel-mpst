@@ -13,7 +13,7 @@ type mpchan = {
   channels: Maps.t(role_tag, Erlang.pid(mpst_msg)),
 };
 
-external payload_cast: 'v => payload = "payload_cast";
+let payload_cast: 'v => payload = (x) => Raw.cast(x);
 // external payload_cast: 'v => payload = "%identity";
 
 let raw_send: 'v. (mpchan, role_tag, label_tag, 'v) => unit =

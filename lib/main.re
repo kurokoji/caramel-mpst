@@ -75,28 +75,30 @@ let g = () => {
 
 let a = ch =>
   if (true) {
-    let ch1 = Caramel_mpst.send(Caramel_mpst.payload_to_session(ch), x => `Bob(x), x => `hello(x), 123);
+    let ch1 = Caramel_mpst.send(ch, x => `Bob(x), x => `hello(x), 123);
     switch (Caramel_mpst.receive_(ch1, x => `Carol(x))) {
     | `hello(_v, ch2) => Caramel_mpst.close(ch2)
     };
   } else {
-    let ch1 = Caramel_mpst.send(Caramel_mpst.payload_to_session(ch), x => `Bob(x), x => `goodbye(x), 123);
+    let ch1 = Caramel_mpst.send(ch, x => `Bob(x), x => `goodbye(x), 123);
     Caramel_mpst.close(ch1);
   };
 
 let b = ch => {
   let ch3 =
-    switch (Caramel_mpst.receive_(Caramel_mpst.payload_to_session(ch), x => `Alice(x))) {
+    switch (Caramel_mpst.receive_(ch, x => `Alice(x))) {
     | `hello(v, ch2) => Caramel_mpst.send(ch2, x => `Carol(x), x => `hello(x), v + 123)
     | `goodbye(_v, ch2) =>
       Caramel_mpst.send(ch2, x => `Carol(x), x => `goodbye(x), "foo")
     };
+  /* let ch4 = Caramel_mpst.send(ch3, x => `Caral(x), x => `goodbye(x), "foo"); */
+  /* Caramel_mpst.close(ch4); */
   Caramel_mpst.close(ch3);
 };
 
 let c = ch => {
   let ch3 =
-    switch (Caramel_mpst.receive_(Caramel_mpst.payload_to_session(ch), x => `Bob(x))) {
+    switch (Caramel_mpst.receive_(ch, x => `Bob(x))) {
     | `hello(_v, ch2) =>
       Caramel_mpst.send(ch2, x => `Alice(x), x => `hello(x), 123)
     | `goodbye(_v, ch2) => ch2

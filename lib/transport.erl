@@ -6,11 +6,9 @@
 -export_type([payload/0]).
 -export_type([role_tag/0]).
 
+-export([payload_cast/1]).
 -export([raw_receive/1]).
 -export([raw_send/4]).
--export([payload_cast/1]).
-
-payload_cast(A) -> A.
 
 -type role_tag() :: polyvar:tag().
 
@@ -23,6 +21,9 @@ payload_cast(A) -> A.
 -type mpchan() :: #{ self => role_tag()
                    , channels => maps:t(role_tag(), erlang:pid())
                    }.
+
+-spec payload_cast(_) -> payload().
+payload_cast(X) -> raw:cast(X).
 
 -spec raw_send(mpchan(), role_tag(), label_tag(), _) -> ok.
 raw_send(Mpchan, Role, Label, V) ->

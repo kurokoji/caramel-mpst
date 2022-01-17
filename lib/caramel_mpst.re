@@ -190,21 +190,23 @@ let to_bob = dis => {
   };
 };
 
-let start = (_g: global(_, _, _), fa, fb, fc) => {
+let payload_to_session: Transport.payload => session('a) = (x) => Raw.cast(x);
+
+let start = (_g: global('a, 'b, 'c), fa:session('a) => unit, fb:session('b) => unit, fc:session('c) => unit) => {
   let pid_a =
     Process.make((_, recv) => {
       let (_, _, ch_a) = from_some(recv(~timeout=Process.Infinity));
-      (fa(ch_a): unit);
+      (fa(payload_to_session(ch_a)): unit);
     });
   let pid_b =
     Process.make((_, recv) => {
       let (_, _, ch_b) = from_some(recv(~timeout=Process.Infinity));
-      (fb(ch_b): unit);
+      (fb(payload_to_session(ch_b)): unit);
     });
   let pid_c =
     Process.make((_, recv) => {
       let (_, _, ch_c) = from_some(recv(~timeout=Process.Infinity));
-      (fc(ch_c): unit);
+      (fc(payload_to_session(ch_c)): unit);
     });
 
   /*
@@ -255,10 +257,6 @@ let start = (_g: global(_, _, _), fa, fb, fc) => {
   );
   ();
 };
-
-external payload_to_session: Transport.payload => session('a) =
-  "payload_to_session";
-// external payload_to_session: Transport.payload => session('a) = "%identity";
 
 // let f = () => {
 //   let x = 1;
