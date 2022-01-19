@@ -28,6 +28,30 @@ let goodbye = () => {
   Caramel_mpst.label_closed: (`goodbye(v)) => v,
   Caramel_mpst.label_open: v => `goodbye(v),
 };
+
+let to_bob = dis: disj('lr, 'l, 'r) => {
+  let concat = dis.concat;
+  let split = dis.split;
+  {
+    concat: (l, r) =>
+      Lists.map(
+        v => `Bob({__out_witness: v}),
+        concat(
+          Lists.map((`Bob(v)) => v.__out_witness, l),
+          Lists.map((`Bob(v)) => v.__out_witness, r),
+        ),
+      ),
+
+    split: lr => {
+      let (l, r) = split(Lists.map((`Bob(v)) => v.__out_witness, lr));
+      (
+        Lists.map(v => `Bob({__out_witness: v}), l),
+        Lists.map(v => `Bob({__out_witness: v}), r),
+      );
+    },
+  };
+};
+
 let hello_or_goodbye: unit => Caramel_mpst.disj('lr, 'l, 'r) =
   () => {
     split: lr => (
@@ -61,7 +85,7 @@ let hello_or_goodbye: unit => Caramel_mpst.disj('lr, 'l, 'r) =
 let g = () => {
   Caramel_mpst.choice_at(
     alice,
-    Caramel_mpst.to_bob(hello_or_goodbye()),
+    to_bob(hello_or_goodbye()),
     (
       alice,
       () =>

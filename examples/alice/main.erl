@@ -16,6 +16,7 @@
 -export([hello/0]).
 -export([hello_or_goodbye/0]).
 -export([main/0]).
+-export([to_bob/1]).
 
 -type phantom(A) :: A.
 
@@ -79,6 +80,35 @@ end
 end
    }.
 
+-spec to_bob(caramel_mpst:disj(A, B, C)) -> caramel_mpst:disj({bob, caramel_mpst:out(A)}
+    , {bob, caramel_mpst:out(B)}
+    , {bob, caramel_mpst:out(C)}
+    ).
+to_bob(Dis) ->
+  Concat = maps:get(concat, Dis),
+  Split = maps:get(split, Dis),
+  #{ concat => fun
+  (L, R) -> lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, Concat(lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, L), lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, R)))
+end
+   , split => fun
+  (Lr) ->
+  {L, R} = Split(lists:map(fun
+  ({bob, V}) -> maps:get('__out_witness', V)
+end, Lr)),
+  {lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, L), lists:map(fun
+  (V) -> {bob, #{ '__out_witness' => V }}
+end, R)}
+end
+   }.
+
 -spec hello_or_goodbye() -> caramel_mpst:disj({goodbye, A}
               | {hello, B}
               , {hello, B}
@@ -121,7 +151,7 @@ end
 ), caramel_mpst:inp({goodbye, {E, caramel_mpst:session(ok)}}
 )}
 )}.
-g() -> caramel_mpst:choice_at(fun alice/0, caramel_mpst:to_bob(hello_or_goodbye()), {fun alice/0, fun
+g() -> caramel_mpst:choice_at(fun alice/0, to_bob(hello_or_goodbye()), {fun alice/0, fun
   () -> caramel_mpst:comm(fun alice/0, fun bob/0, fun hello/0, fun
   () -> caramel_mpst:comm(fun bob/0, fun carol/0, fun hello/0, fun
   () -> caramel_mpst:comm(fun carol/0, fun alice/0, fun hello/0, fun caramel_mpst:finish/0)

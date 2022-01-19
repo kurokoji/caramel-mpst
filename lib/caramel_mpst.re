@@ -167,29 +167,6 @@ let from_some = opt => {
   };
 };
 
-let to_bob = dis => {
-  let concat = dis.concat;
-  let split = dis.split;
-  {
-    concat: (l, r) =>
-      Lists.map(
-        v => `Bob({__out_witness: v}),
-        concat(
-          Lists.map((`Bob(v)) => v.__out_witness, l),
-          Lists.map((`Bob(v)) => v.__out_witness, r),
-        ),
-      ),
-
-    split: lr => {
-      let (l, r) = split(Lists.map((`Bob(v)) => v.__out_witness, lr));
-      (
-        Lists.map(v => `Bob({__out_witness: v}), l),
-        Lists.map(v => `Bob({__out_witness: v}), r),
-      );
-    },
-  };
-};
-
 let payload_to_session: Transport.payload => session('a) = (x) => Raw.cast(x);
 
 let start = (_g: global('a, 'b, 'c), fa:session('a) => unit, fb:session('b) => unit, fc:session('c) => unit) => {

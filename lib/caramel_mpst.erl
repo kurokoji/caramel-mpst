@@ -25,7 +25,6 @@
 -export([receive_/2]).
 -export([send/4]).
 -export([start/4]).
--export([to_bob/1]).
 
 -type session(A) :: #{ mpchan => transport:mpchan()
                      , dummy_witness => A
@@ -133,35 +132,6 @@ from_some(Opt) ->
     {some, V} -> V;
     none -> raw:fail()
   end.
-
--spec to_bob(disj(A, B, C)) -> disj({bob, out(A)}
-    , {bob, out(B)}
-    , {bob, out(C)}
-    ).
-to_bob(Dis) ->
-  Concat = maps:get(concat, Dis),
-  Split = maps:get(split, Dis),
-  #{ concat => fun
-  (L, R) -> lists:map(fun
-  (V) -> {bob, #{ '__out_witness' => V }}
-end, Concat(lists:map(fun
-  ({bob, V}) -> maps:get('__out_witness', V)
-end, L), lists:map(fun
-  ({bob, V}) -> maps:get('__out_witness', V)
-end, R)))
-end
-   , split => fun
-  (Lr) ->
-  {L, R} = Split(lists:map(fun
-  ({bob, V}) -> maps:get('__out_witness', V)
-end, Lr)),
-  {lists:map(fun
-  (V) -> {bob, #{ '__out_witness' => V }}
-end, L), lists:map(fun
-  (V) -> {bob, #{ '__out_witness' => V }}
-end, R)}
-end
-   }.
 
 -spec payload_to_session(transport:payload()) -> session(_).
 payload_to_session(X) -> raw:cast(X).
