@@ -1,5 +1,5 @@
 % Source code generated with Caramel.
--module(main).
+-module(main2).
 -export_type([phantom/1]).
 
 -export([a/1]).
@@ -31,8 +31,8 @@ get_bob_typ(_x) -> raw:dontknow().
 -spec get_carol_typ(caramel_mpst:global(_, _, _c)) -> phantom(_c).
 get_carol_typ(_x) -> raw:dontknow().
 
--spec alice() -> caramel_mpst:role(A, B, {caramel_mpst:session(A), C, D}, {caramel_mpst:session(B), C, D}, {alice, _a}
-   , _a).
+-spec alice() -> caramel_mpst:role(A, B, {caramel_mpst:session(A), C, D}, {caramel_mpst:session(B), C, D}, {alice, E}
+   , E).
 alice() ->
   #{ role_label => fun
   ({alice, V}) -> V
@@ -40,8 +40,8 @@ end
    , role_lens => caramel_mpst:lens_a()
    }.
 
--spec bob() -> caramel_mpst:role(A, B, {C, caramel_mpst:session(A), D}, {C, caramel_mpst:session(B), D}, {bob, _b}
- , _b).
+-spec bob() -> caramel_mpst:role(A, B, {C, caramel_mpst:session(A), D}, {C, caramel_mpst:session(B), D}, {bob, E}
+ , E).
 bob() ->
   #{ role_label => fun
   ({bob, V}) -> V
@@ -49,8 +49,8 @@ end
    , role_lens => caramel_mpst:lens_b()
    }.
 
--spec carol() -> caramel_mpst:role(A, B, {C, D, caramel_mpst:session(A)}, {C, D, caramel_mpst:session(B)}, {carol, _c}
-   , _c).
+-spec carol() -> caramel_mpst:role(A, B, {C, D, caramel_mpst:session(A)}, {C, D, caramel_mpst:session(B)}, {carol, E}
+   , E).
 carol() ->
   #{ role_label => fun
   ({carol, V}) -> V

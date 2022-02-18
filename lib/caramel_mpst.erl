@@ -15,6 +15,7 @@
 -export([close/1]).
 -export([comm/4]).
 -export([finish/0]).
+-export([fix/1]).
 -export([from_some/1]).
 -export([lens_a/0]).
 -export([lens_b/0]).
@@ -22,7 +23,7 @@
 -export([list_match/2]).
 -export([open_variant_to_tag/1]).
 -export([payload_to_session/1]).
--export([receive_/2]).
+-export([recv/2]).
 -export([send/4]).
 -export([start/4]).
 
@@ -105,8 +106,8 @@ send(Sess, Role, Label, V) ->
      }
   end.
 
--spec receive_(session(_var), open_variant(_var, inp(_lab))) -> _lab.
-receive_(Sess, Role) ->
+-spec recv(session(_var), open_variant(_var, inp(_lab))) -> _lab.
+recv(Sess, Role) ->
   Roletag = open_variant_to_tag(Role),
   {Labeltag, V} = transport:raw_receive(Roletag),
   Cont = #{ mpchan => maps:get(mpchan, Sess)
@@ -125,6 +126,9 @@ finish() -> raw:dontknow().
 
 -spec choice_at(fun(() -> role(ok, _lr, global(_a, _b, _c), _cur, _x, _)), disj(_lr, _l, _r), {fun(() -> role(_l, ok, _left, global(_a, _b, _c), _x, _)), fun(() -> _left)}, {fun(() -> role(_r, ok, _right, global(_a, _b, _c), _x, _)), fun(() -> _right)}) -> _cur.
 choice_at(_alice, _disj, {_alice1, _left}, {_alice2, _right}) -> raw:dontknow().
+
+-spec fix(fun((global(_a, _b, _c)) -> global(_a, _b, _c))) -> global(_a, _b, _c).
+fix(_g) -> raw:dontknow().
 
 -spec from_some(option:t(A)) -> A.
 from_some(Opt) ->

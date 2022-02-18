@@ -79,7 +79,7 @@ let send:
     {mpchan: sess.mpchan, dummy_witness: Raw.dontknow()};
   };
 
-let receive_:
+let recv:
   'var 'lab.
   (session('var), open_variant('var, inp('lab))) => 'lab
  =
@@ -142,6 +142,8 @@ let choice_at:
 
      */
     Raw.dontknow();
+
+let fix : 'a 'b 'c. (global('a, 'b, 'c) => global('a,'b,'c)) => global('a,'b,'c) = (_g) => Raw.dontknow()
 
 /*
  let extract:
